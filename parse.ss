@@ -18,6 +18,15 @@
     (ids (list-of symbol?))
     (opt-id symbol?)
     (bodies (list-of expression?))]
+  [let-binding-exp
+    (id symbol?)
+    (binding expression?)]
+  [let-exp
+    (bindings (list-of let-binding-exp))
+    (bodies (list-of expression?))]
+  [let*-exp 
+    (bindings (list-of let-binding))
+    (bodies (list-of expression?))]
   [app-exp
    (operator expression?)
    (operands (list-of expression?))]
@@ -29,7 +38,7 @@
 (define 2nd cadr)
 (define 3rd caddr)
 
-(define parse-exp         
+(trace-define parse-exp         
   (lambda (datum)
     (cond
       [(symbol? datum) (var-exp datum)]
@@ -50,6 +59,10 @@
                 (lambda-n-exp
                   (2nd datum)
                   (map parse-exp (cddr datum)))))]
+          [(eqv? (car datum) 'let)
+            (let-exp 
+              (map (lambda (binding) (let-binding-exp (car binding) (parse-exp (cadr binding)))) (2nd datum))
+              (map parse-exp (cddr datum)))]
           [else (app-exp (parse-exp (1st datum))
 		        (map parse-exp (cdr datum)))])]
       [else (eopl:error 'parse-exp "bad expression: ~s" datum)])))
@@ -58,7 +71,15 @@
   (lambda (parsed-exp)
     (cases expression parsed-exp
       [var-exp (id) id]
-      [lambda-exp (ids bodies) (list 'lambda ids (map unparse-exp bodies))]
+      [lambda-exp (ids bodies) (append (list 'lambda ids) (map unparse-exp bodies))]
+      [lambda-n-exp (id bodies) (append (list 'lambda id) (map unparse-exp bodies))]
+      [lambda-imp-exp (ids opt-id bodies) (append (list 'lambda (append ids opt-id)) (map unparse-exp bodies))]
+      [let-exp (bindings bodies) 
+        (append 
+          (list 'let (map (lambda (binding) (unparse-exp ((car binding) (unparse-exp (cadr binding))))) bindings))
+          (map unparse-exp bodies))]
+      [let-binding-exp (id binding) (list id (unparse-exp binding))]
+      [let*-exp (bindings bodies) 'nyi]
       [app-exp (operator operands) (cons (unparse-exp operator) (map unparse-exp operands))]
       [lit-exp (id) id]))) 
 
@@ -77,7 +98,6 @@
       (if (symbol? (cdr imp-list))
         (list (reverse (cons (car imp-list) acc)) (cdr imp-list))
         (helper (cdr imp-list) (cons (car imp-list) acc))))))
-
 
 
 
