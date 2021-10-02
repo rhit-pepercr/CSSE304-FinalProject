@@ -22,7 +22,7 @@
     (id symbol?)
     (binding expression?)]
   [let-exp
-    (bindings (list-of let-binding-exp))
+    (bindings (list-of expression?))
     (bodies (list-of expression?))]
   [let*-exp 
     (bindings (list-of let-binding))
@@ -41,30 +41,44 @@
 (trace-define parse-exp         
   (lambda (datum)
     (cond
+      ; variable expression
       [(symbol? datum) (var-exp datum)]
+
+      ; literal expression
       [(number? datum) (lit-exp datum)]
+
       [(pair? datum)
         (cond
+
+          ; lambda expressions
           [(eqv? (car datum) 'lambda)
-            (if (list? (2nd datum))
+            (if (list? (2nd datum)) 
+              ; normal lambda expression
               (lambda-exp 
                 (2nd  datum)
                 (map parse-exp (cddr datum)))
-              (if (pair? (2nd datum))
+              (if (pair? (2nd datum)) 
+                ; improper params lambda expression
                 (let ([split-list (split-imp (2nd datum))])
                   (lambda-imp-exp
                     (car split-list)
                     (cadr split-list)
                     (map parse-exp (cddr datum))))
+                ; arbitrary param count lambda expression
                 (lambda-n-exp
                   (2nd datum)
                   (map parse-exp (cddr datum)))))]
+
+          ; let expression
           [(eqv? (car datum) 'let)
             (let-exp 
               (map (lambda (binding) (let-binding-exp (car binding) (parse-exp (cadr binding)))) (2nd datum))
               (map parse-exp (cddr datum)))]
+
+          ; app expression
           [else (app-exp (parse-exp (1st datum))
 		        (map parse-exp (cdr datum)))])]
+
       [else (eopl:error 'parse-exp "bad expression: ~s" datum)])))
 
 (define unparse-exp
@@ -76,7 +90,7 @@
       [lambda-imp-exp (ids opt-id bodies) (append (list 'lambda (append ids opt-id)) (map unparse-exp bodies))]
       [let-exp (bindings bodies) 
         (append 
-          (list 'let (map (lambda (binding) (unparse-exp ((car binding) (unparse-exp (cadr binding))))) bindings))
+          (list 'let (map unparse-exp bindings))
           (map unparse-exp bodies))]
       [let-binding-exp (id binding) (list id (unparse-exp binding))]
       [let*-exp (bindings bodies) 'nyi]
