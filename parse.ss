@@ -50,8 +50,7 @@
 (define-datatype literal literal?
   [num-lit (id number?)]
   [str-lit (id string?)]
-  [list-lit (id pair?)]
-  [sym-lit (id symbol?)]
+  [quote-lit (id pair?)]
   [bool-lit (id boolean?)])
 
 ; Procedures to make the parser a little bit saner.
@@ -78,10 +77,7 @@
         (cond
           ; literal symbol and list
           [(eqv? (car datum) 'quote)
-            (lit-exp
-              (if (symbol? (2nd datum))
-                (sym-lit (2nd datum))
-                (list-lit (2nd datum))))]
+            (lit-exp (quote-lit datum))]
                 
           ; lambda expressions
           [(eqv? (car datum) 'lambda)
@@ -104,16 +100,16 @@
 
           ; let expressions
           [(eqv? (car datum) 'let)
-            (if (pair? (2nd datum))
-              ; regular let expression
-              (let-exp 
-                (map (lambda (binding) (let-binding-exp (car binding) (parse-exp (cadr binding)))) (2nd datum))
-                (map parse-exp (cddr datum)))
+            (if (symbol? (2nd datum))
               ; named let expression
               (named-let-exp
                 (2nd datum)
                 (map (lambda (binding) (let-binding-exp (car binding) (parse-exp (cadr binding)))) (3rd datum))
-                (map parse-exp (cdddr datum))))]
+                (map parse-exp (cdddr datum)))
+              ; regular let expression
+              (let-exp 
+                (map (lambda (binding) (let-binding-exp (car binding) (parse-exp (cadr binding)))) (2nd datum))
+                (map parse-exp (cddr datum))))]
 
           ; let* expression
           [(eqv? (car datum) 'let*)
@@ -178,7 +174,7 @@
           (list 'if (unparse-exp condition) (unparse-exp then) (unparse-exp else)))]
       [set!-exp (id value) (list 'set! id (unparse-exp value))]
       [app-exp (operator operands) (cons (unparse-exp operator) (map unparse-exp operands))]
-      [lit-exp (id) id]))) 
+      [lit-exp (id) (cadr id)]))) 
 
 ; An auxiliary procedure that could be helpful.
 (define var-exp?
