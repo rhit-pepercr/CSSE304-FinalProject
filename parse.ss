@@ -48,11 +48,11 @@
     (value expression?)])
 
 (define-datatype literal literal?
-  [num (id number?)]
-  [str (id string?)]
-  [list (id pair?)]
-  [sym (id symbol?)]
-  [bool (id boolean?)])
+  [num-lit (id number?)]
+  [str-lit (id string?)]
+  [list-lit (id pair?)]
+  [sym-lit (id symbol?)]
+  [bool-lit (id boolean?)])
 
 ; Procedures to make the parser a little bit saner.
 (define 1st car)
@@ -62,14 +62,27 @@
 (define parse-exp         
   (lambda (datum)
     (cond
+      ; literal number
+      [(number? datum) (lit-exp (num-lit datum))]
+
+      ; literal string
+      [(string? datum) (lit-exp (str-lit datum))]
+
+      ; literal boolean
+      [(boolean? datum) (lit-exp (bool-lit datum))]
+
       ; variable expression
       [(symbol? datum) (var-exp datum)]
 
-      ; literal expression
-      [(number? datum) (lit-exp datum)]
-
       [(pair? datum)
         (cond
+          ; literal symbol and list
+          [(eqv? (car datum) 'quote)
+            (lit-exp
+              (if (symbol? (2nd datum))
+                (sym-lit (2nd datum))
+                (list-lit (2nd datum))))]
+                
           ; lambda expressions
           [(eqv? (car datum) 'lambda)
             (if (list? (2nd datum)) 
