@@ -38,7 +38,7 @@
    (operator expression?)
    (operands (list-of expression?))]
   [lit-exp
-    (id literal?)]
+    (id (lambda (x) (ormap (lambda (proc) (proc x)) literals)))]
   [if-exp
     (condition expression?)
     (then expression?)
@@ -47,11 +47,7 @@
     (id symbol?)
     (value expression?)])
 
-(define-datatype literal literal?
-  [num-lit (id number?)]
-  [str-lit (id string?)]
-  [quote-lit (id pair?)]
-  [bool-lit (id boolean?)])
+(define literals (list number? string? symbol? list? boolean?))
 
 ; Procedures to make the parser a little bit saner.
 (define 1st car)
@@ -62,13 +58,13 @@
   (lambda (datum)
     (cond
       ; literal number
-      [(number? datum) (lit-exp (num-lit datum))]
+      [(number? datum) (lit-exp datum)]
 
       ; literal string
-      [(string? datum) (lit-exp (str-lit datum))]
+      [(string? datum) (lit-exp datum)]
 
       ; literal boolean
-      [(boolean? datum) (lit-exp (bool-lit datum))]
+      [(boolean? datum) (lit-exp datum)]
 
       ; variable expression
       [(symbol? datum) (var-exp datum)]
@@ -77,7 +73,7 @@
         (cond
           ; literal symbol and list
           [(eqv? (car datum) 'quote)
-            (lit-exp (quote-lit datum))]
+            (lit-exp datum)]
                 
           ; lambda expressions
           [(eqv? (car datum) 'lambda)
@@ -174,7 +170,7 @@
           (list 'if (unparse-exp condition) (unparse-exp then) (unparse-exp else)))]
       [set!-exp (id value) (list 'set! id (unparse-exp value))]
       [app-exp (operator operands) (cons (unparse-exp operator) (map unparse-exp operands))]
-      [lit-exp (id) (cadr id)]))) 
+      [lit-exp (id) id]))) 
 
 ; An auxiliary procedure that could be helpful.
 (define var-exp?
