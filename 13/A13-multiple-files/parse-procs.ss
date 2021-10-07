@@ -19,6 +19,9 @@
       ; literal boolean
       [(boolean? datum) (lit-exp datum)]
 
+      ; literal vector
+      [(vector? datum) (lit-exp datum)]
+
       ; variable expression
       [(symbol? datum) (var-exp datum)]
 

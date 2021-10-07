@@ -38,7 +38,7 @@
     (id (lambda (x) 
           (ormap (lambda (pred) 
             (pred x)) 
-            (list number? string? symbol? list? boolean?))))]
+            (list number? string? symbol? list? boolean? vector?))))]
   [if-exp
     (condition expression?)
     (then expression?)
@@ -65,7 +65,12 @@
 
 (define-datatype proc-val proc-val?
   [prim-proc
-   (name symbol?)])
+   (name symbol?)]
+  [closure 
+    (ids (list-of symbol?))
+    (bodies (list-of expression?))
+    (env environment?)])
+
 	 
 	 
 	 
