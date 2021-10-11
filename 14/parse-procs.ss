@@ -123,6 +123,25 @@
                   (2nd datum)
                   (parse-exp (3rd datum)))])]
 
+          ; begin expression
+          [(eqv? (car datum) 'begin)
+            (if (null? (cdr datum))
+              (begin-exp (list (parse-exp 'void)))
+              (begin-exp
+                (map parse-exp (cdr datum))))]
+
+          ; cond expression
+          [(eqv? (car datum) 'cond)
+            (if (null? (cdr datum))
+              (eopl:error 'parse-exp "Invalid 'cond' Expression: Insufficient Length in ~s" datum)
+              (cond-exp
+                (map 
+                  (lambda (clause) 
+                    (cond-clause 
+                      (parse-exp (car clause)) 
+                      (map parse-exp (cdr clause))))
+                  (cdr datum))))]
+
           ; app expression
           [else (app-exp (parse-exp (1st datum))
 		        (map parse-exp (cdr datum)))])]
@@ -158,6 +177,9 @@
           (list 'if (unparse-exp condition) (unparse-exp then))
           (list 'if (unparse-exp condition) (unparse-exp then) (unparse-exp else)))]
       [set!-exp (id value) (list 'set! id (unparse-exp value))]
+      [begin-exp (expressions) (append (list 'begin) (map unparse-exp expressions))]
+      [cond-exp (clauses) (append (list 'cond) (map (lambda (clause) (unparse-exp clause)) clauses))]
+      [cond-clause (test bodies) (append (list (unparse-exp test)) (map unparse-exp bodies))]
       [app-exp (operator operands) (cons (unparse-exp operator) (map unparse-exp operands))]
       [lit-exp (id) id]))) 
 

@@ -45,7 +45,14 @@
     (else expression?)]
   [set!-exp
     (id symbol?)
-    (value expression?)])
+    (value expression?)]
+  [begin-exp
+    (expressions (list-of expression?))]
+  [cond-exp
+    (clauses (list-of expression?))]
+  [cond-clause 
+    (test expression?)
+    (bodies (list-of expression?))])
 
  	
 ;; environment type definitions
@@ -68,6 +75,15 @@
    (name symbol?)]
   [closure 
     (ids (list-of symbol?))
+    (bodies (list-of expression?))
+    (env environment?)]
+  [n-closure
+    (id symbol?)
+    (bodies (list-of expression?))
+    (env environment?)]
+  [imp-closure
+    (ids (list-of symbol?))
+    (opt-id symbol?)
     (bodies (list-of expression?))
     (env environment?)])
 

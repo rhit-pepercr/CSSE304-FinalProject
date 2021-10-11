@@ -15,26 +15,44 @@
           (if (eqv? (car datum) 'quote)
             (cadr datum))
           datum)]
+
       [var-exp (id)
 	      (apply-env env id)]
+
       [if-exp (condition then-exp else-exp)
         (if (eval-exp condition env)
           (eval-exp then-exp env)
           (eval-exp else-exp env))]
+
       [let-binding-exp (id binding)
         (cons id (eval-exp binding env))]
+
       [let-exp (bindings bodies)
         (let ([pairs (map (lambda (binding) (eval-exp binding env)) bindings)])
           (let ([new-env (extend-env (map car pairs) (map cdr pairs) env)])
             (for-each (lambda (body) (eval-exp body new-env)) bodies)))]
+
       [app-exp (operator operands)
         (let ([proc-value (eval-exp operator env)]
               [args (map (lambda (operand) (eval-exp operand env)) operands)])
           (apply-proc proc-value args))]
+
       [lambda-exp (ids bodies)
         (closure ids bodies env)]
+      
+      [lambda-n-exp (id bodies)
+        (n-closure id bodies env)]
+
+      [lambda-imp-exp (ids opt-id bodies)
+        (imp-closure ids opt-id bodies env)]
+
       [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
+(define split-for-imp
+  (lambda (lst proper-len)
+    (if (zero? proper-len)
+      (list lst)
+      (cons (car lst) (split-for-imp (cdr lst) (sub1 proper-len))))))
 
 ;  Apply a procedure to its arguments.
 ;  At this point, we only have primitive procedures.  
@@ -49,6 +67,15 @@
         (let ([new-env (extend-env ids args env)])
           (for-each (lambda (body) (eval-exp body new-env)) bodies))]
 
+      [n-closure (id bodies env)
+        (let ([new-env (extend-env (list id) (list args) env)])
+          (for-each (lambda (body) (eval-exp body new-env)) bodies))]
+
+      [imp-closure (ids opt-id bodies env)
+        (let* ([split-args (split-for-imp args (length ids))]
+               [new-env (extend-env (append ids (list opt-id)) split-args env)])
+          (for-each (lambda (body) (eval-exp body new-env)) bodies))]
+
 			; You will add other cases
       [else (error 'apply-proc
                    "Attempt to apply bad procedure: ~s" 
@@ -58,7 +85,7 @@
   '(+ - * / add1 sub1 cons = zero? not >= > < <= car cdr list null? eq? equal? length list->vector 
     list? not pair? vector->list number? vector? symbol? caar cadr cdar cddr caaar caadr cadar caddr 
     cdaar cdadr cddar cdddr procedure? set-car! set-cdr! assq atom? vector make-vector vector-ref 
-    vector-set! display newline))
+    vector-set! display newline void map apply))
 
 (define init-env         ; for now, our initial global environment only contains 
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -124,6 +151,9 @@
       [(vector-set!) (vector-set! (1st args) (2nd args) (3rd args))]
       [(display) (apply display args)]
       [(newline) (newline)]
+      [(void) (void)]
+      [(map) (map (lambda (arg) (apply-proc (1st args) (list arg))) (2nd args))]
+      [(apply) (apply-proc (1st args) (2nd args))]
 
       [else (error 'apply-prim-proc 
             "Bad primitive procedure name: ~s" 
@@ -144,7 +174,7 @@
           (rep))))))  ; tail-recursive, so stack doesn't grow.
 
 (define eval-one-exp
-  (lambda (x) (top-level-eval (parse-exp x))))
+  (lambda (x) (top-level-eval (syntax-expand (parse-exp x)))))
 
 
 
