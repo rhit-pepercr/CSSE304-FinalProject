@@ -52,6 +52,13 @@
     (clauses (list-of expression?))]
   [cond-clause 
     (test expression?)
+    (bodies (list-of expression?))]
+  [and-exp
+    (clauses (list-of expression?))]
+  [or-exp 
+    (clauses (list-of expression?))]
+  [while-exp
+    (test expression?)
     (bodies (list-of expression?))])
 
  	

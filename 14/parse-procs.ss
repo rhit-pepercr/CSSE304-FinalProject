@@ -142,6 +142,26 @@
                       (map parse-exp (cdr clause))))
                   (cdr datum))))]
 
+          ; and expression
+          [(eqv? (car datum) 'and)
+            (if (null? (cdr datum))
+              (and-exp (list (lit-exp #t)))
+              (and-exp (map parse-exp (cdr datum))))]
+
+          ; or expression
+          [(eqv? (car datum) 'or)
+            (if (null? (cdr datum))
+              (or-exp (list (lit-exp #f)))
+              (or-exp (map parse-exp (cdr datum))))]
+
+          ; while loop expression
+          [(eqv? (car datum) 'while)
+            (if (null? (cdr datum))
+              (eopl:error 'parse-exp "Invalid 'while' expression ~s: Insufficient length" datum)
+              (if (null? (cddr datum))
+                (while-exp (parse-exp (cadr datum)) (list (parse-exp 'void)))
+                (while-exp (parse-exp (cadr datum)) (map parse-exp (cddr datum)))))]
+
           ; app expression
           [else (app-exp (parse-exp (1st datum))
 		        (map parse-exp (cdr datum)))])]
@@ -178,8 +198,11 @@
           (list 'if (unparse-exp condition) (unparse-exp then) (unparse-exp else)))]
       [set!-exp (id value) (list 'set! id (unparse-exp value))]
       [begin-exp (expressions) (append (list 'begin) (map unparse-exp expressions))]
-      [cond-exp (clauses) (append (list 'cond) (map (lambda (clause) (unparse-exp clause)) clauses))]
+      [cond-exp (clauses) (append (list 'cond) (map unparse-exp clauses))]
       [cond-clause (test bodies) (append (list (unparse-exp test)) (map unparse-exp bodies))]
+      [and-exp (clauses) (append (list 'and) (map unparse-exp clauses))]
+      [or-exp (clauses) (append (list 'or) (map unparse-exp clauses))]
+      [while-exp (test bodies) (append (list 'while (unparse-exp test)) (map unparse-exp bodies))]
       [app-exp (operator operands) (cons (unparse-exp operator) (map unparse-exp operands))]
       [lit-exp (id) id]))) 
 

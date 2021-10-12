@@ -22,15 +22,17 @@
       [if-exp (condition then-exp else-exp)
         (if (eval-exp condition env)
           (eval-exp then-exp env)
-          (eval-exp else-exp env))]
+          (if (eqv? (cadr else-exp) 'void)
+            (void)
+            (eval-exp else-exp env)))]
 
       [let-binding-exp (id binding)
         (cons id (eval-exp binding env))]
 
-      [let-exp (bindings bodies)
-        (let ([pairs (map (lambda (binding) (eval-exp binding env)) bindings)])
-          (let ([new-env (extend-env (map car pairs) (map cdr pairs) env)])
-            (for-each (lambda (body) (eval-exp body new-env)) bodies)))]
+      ;[let-exp (bindings bodies)
+      ;  (let ([pairs (map (lambda (binding) (eval-exp binding env)) bindings)])
+      ;    (let ([new-env (extend-env (map car pairs) (map cdr pairs) env)])
+      ;      (for-each (lambda (body) (eval-exp body new-env)) bodies)))]
 
       [app-exp (operator operands)
         (let ([proc-value (eval-exp operator env)]
@@ -45,6 +47,24 @@
 
       [lambda-imp-exp (ids opt-id bodies)
         (imp-closure ids opt-id bodies env)]
+
+      [while-exp (test bodies)
+        (let loop ()
+          (if (eval-exp test env)
+            (begin
+              (for-each (lambda (body) (eval-exp body env)) bodies)
+              (loop))
+            (void)))]
+            
+
+      ; Expanded Syntax
+      [let-exp (bindings bodies) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
+      [let*-exp (bindings bodies) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
+      [begin-exp (expressions) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
+      [cond-exp (clauses) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
+      [cond-clause (test bodies) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
+      [and-exp (clauses) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
+      [or-exp (clauses) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
 
       [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
@@ -85,7 +105,7 @@
   '(+ - * / add1 sub1 cons = zero? not >= > < <= car cdr list null? eq? equal? length list->vector 
     list? not pair? vector->list number? vector? symbol? caar cadr cdar cddr caaar caadr cadar caddr 
     cdaar cdadr cddar cdddr procedure? set-car! set-cdr! assq atom? vector make-vector vector-ref 
-    vector-set! display newline void map apply))
+    vector-set! display newline void map apply negative? positive? quotient))
 
 (define init-env         ; for now, our initial global environment only contains 
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -154,6 +174,9 @@
       [(void) (void)]
       [(map) (map (lambda (arg) (apply-proc (1st args) (list arg))) (2nd args))]
       [(apply) (apply-proc (1st args) (2nd args))]
+      [(negative?) (negative? (1st args))]
+      [(positive?) (positive? (1st args))]
+      [(quotient) (quotient (1st args) (2nd args))]
 
       [else (error 'apply-prim-proc 
             "Bad primitive procedure name: ~s" 

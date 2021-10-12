@@ -17,7 +17,10 @@
                     ids
                     opt-id
                     (map syntax-expand bodies))]
-            [let-binding-exp (id binding) parsed-exp] ; SHOULD NOT OCCUR
+            [let-binding-exp (id binding) 
+                (let-binding-exp
+                    id
+                    (syntax-expand binding))]
             [let-exp (bindings bodies)
                 (app-exp
                     (lambda-exp 
@@ -46,11 +49,55 @@
                                 (if-exp (lit-exp #t) (car (caddar clauses)) (if-nest (sub1 num-ifs) (cdr clauses)))
                                 (if-exp (cadar clauses) (car (caddar clauses)) (if-nest (sub1 num-ifs) (cdr clauses)))))))]
 
-            [cond-clause (test bodies) parsed-exp]
+            [cond-clause (test bodies) parsed-exp] ; SHOULD NOT OCCUR
 
-            [letrec-exp (bindings bodies) parsed-exp] ; TODO
-            [named-let-exp (name bindings bodies) parsed-exp] ; TODO
-            [app-exp (operator operands) parsed-exp] ; TODO
+            [and-exp (clauses)
+                (syntax-expand 
+                    (let if-nest ([num-ifs (length clauses)] [clauses clauses])
+                        (cond 
+                            [(zero? num-ifs) (lit-exp #t)]
+                            [(= num-ifs 1) (car clauses)]
+                            [#t 
+                                (if-exp 
+                                    (car clauses)
+                                    (if-nest (sub1 num-ifs) (cdr clauses))
+                                    (lit-exp #f))])))] 
+
+            [or-exp (clauses)
+                (syntax-expand 
+                    (let if-nest ([num-ifs (length clauses)] [clauses clauses])
+                        (if (zero? num-ifs)
+                            (lit-exp #f)
+                            (let-exp (list (let-binding-exp 'result (car clauses)))
+                                (list (if-exp 
+                                    (var-exp 'result)
+                                    (var-exp 'result)
+                                    (if-nest (sub1 num-ifs) (cdr clauses))))))))] 
+
+            [letrec-exp (bindings bodies) 
+                (letrec-exp
+                    (map syntax-expand bindings)
+                    (map syntax-expand bodies))]
+            [named-let-exp (name bindings bodies) 
+                (named-let-exp
+                    name
+                    (map syntax-expand bindings)
+                    (map syntax-expand bodies))]
+            [app-exp (operator operands) 
+                (app-exp
+                    (syntax-expand operator)
+                    (map syntax-expand operands))]
             [lit-exp (id) parsed-exp] 
-            [if-exp (condition then else) parsed-exp] ; TODO
-            [set!-exp (id value) parsed-exp]))) ; TODO
+            [if-exp (condition then else)
+                (if-exp
+                    (syntax-expand condition)
+                    (syntax-expand then)
+                    (syntax-expand else))]
+            [set!-exp (id value) 
+                (set!-exp
+                    id
+                    (syntax-expand value))]
+            [while-exp (test bodies)
+                (while-exp
+                    (syntax-expand test)
+                    (map syntax-expand bodies))])))
