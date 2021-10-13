@@ -55,16 +55,6 @@
               (for-each (lambda (body) (eval-exp body env)) bodies)
               (loop))
             (void)))]
-            
-
-      ; Expanded Syntax
-      [let-exp (bindings bodies) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
-      [let*-exp (bindings bodies) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
-      [begin-exp (expressions) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
-      [cond-exp (clauses) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
-      [cond-clause (test bodies) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
-      [and-exp (clauses) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
-      [or-exp (clauses) (eopl:error 'eval-exp "Syntax not properly expanded: ~a" exp)]
 
       [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
