@@ -179,7 +179,7 @@
       (if (equal? input '(exit))
         (eopl:error 'rep "Successfully Exited rep")
         ;; notice that we don't save changes to the environment...
-        (let ([answer (top-level-eval (parse-exp input))])
+        (let ([answer (top-level-eval (syntax-expand (parse-exp input)))])
           (if (proc-val? answer)
             (eopl:pretty-print '<interpreter-procedure>)
             (eopl:pretty-print answer))
