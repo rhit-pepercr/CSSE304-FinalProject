@@ -45,7 +45,7 @@
     (else expression?)]
   [set!-exp
     (id symbol?)
-    (value expression?)]
+    (expression expression?)]
   [begin-exp
     (expressions (list-of expression?))]
   [cond-exp

@@ -7,7 +7,7 @@
 
 (define extend-env
   (lambda (syms vals env)
-    (extended-env-record syms vals env)))
+    (extended-env-record syms (map box vals) env)))
 
 (define list-find-position
   (lambda (sym los)
@@ -16,7 +16,7 @@
 	    [(eq? sym (car los)) pos]
 	    [else (loop (cdr los) (add1 pos))]))))
 	    
-(define apply-env
+(define apply-env-ref
   (lambda (env sym) 
     (cases environment env 
       [empty-env-record ()      
@@ -25,7 +25,15 @@
 	      (let ((pos (list-find-position sym syms)))
       	    (if (number? pos)
 	            (list-ref vals pos)
-	            (apply-env env sym)))])))
+	            (apply-env-ref env sym)))])))
+
+(define apply-env
+  (lambda (env sym)
+    (unbox (apply-env-ref env sym))))
+
+(define set-ref!
+  (lambda (ref val)
+    (set-box! ref val)))
 
 (define apply-global-env
   (lambda (sym) 

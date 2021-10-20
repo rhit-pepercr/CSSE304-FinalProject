@@ -29,11 +29,6 @@
       [let-binding-exp (id binding)
         (cons id (eval-exp binding env))]
 
-      ;[let-exp (bindings bodies)
-      ;  (let ([pairs (map (lambda (binding) (eval-exp binding env)) bindings)])
-      ;    (let ([new-env (extend-env (map car pairs) (map cdr pairs) env)])
-      ;      (for-each (lambda (body) (eval-exp body new-env)) bodies)))]
-
       [app-exp (operator operands)
         (let ([proc-value (eval-exp operator env)]
               [args (map (lambda (operand) (eval-exp operand env)) operands)])
@@ -47,6 +42,11 @@
 
       [lambda-imp-exp (ids opt-id bodies)
         (imp-closure ids opt-id bodies env)]
+
+      [set!-exp (id expression)
+        (set-ref!
+          (apply-env-ref env id)
+          (eval-exp expression env))]
 
       [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 

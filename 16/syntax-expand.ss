@@ -34,6 +34,15 @@
                             bodies
                             (list (let-exp (list (car bindings)) (let-nest (sub1 num-lets) (cdr bindings))))))))]
 
+            [letrec-exp (bindings bodies)
+                (syntax-expand
+                    (let-exp
+                        (map (lambda (binding) (let-binding-exp (car binding) (lit-exp '()))) bindings)
+                        (append
+                            (map (lambda (binding) (set!-exp (car binding) (var-exp (cadr binding)))) bindings)
+                            bodies)))]
+
+
             [begin-exp (expressions)
                 (syntax-expand
                     (let-exp
@@ -74,10 +83,6 @@
                                     (var-exp 'result)
                                     (if-nest (sub1 num-ifs) (cdr clauses))))))))] 
 
-            [letrec-exp (bindings bodies) 
-                (letrec-exp
-                    (map syntax-expand bindings)
-                    (map syntax-expand bodies))]
             [named-let-exp (name bindings bodies) 
                 (named-let-exp
                     name

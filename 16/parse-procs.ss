@@ -196,7 +196,7 @@
         (if (equal? '(var-exp void) else)
           (list 'if (unparse-exp condition) (unparse-exp then))
           (list 'if (unparse-exp condition) (unparse-exp then) (unparse-exp else)))]
-      [set!-exp (id value) (list 'set! id (unparse-exp value))]
+      [set!-exp (id expression) (list 'set! id (unparse-exp expression))]
       [begin-exp (expressions) (append (list 'begin) (map unparse-exp expressions))]
       [cond-exp (clauses) (append (list 'cond) (map unparse-exp clauses))]
       [cond-clause (test bodies) (append (list (unparse-exp test)) (map unparse-exp bodies))]
