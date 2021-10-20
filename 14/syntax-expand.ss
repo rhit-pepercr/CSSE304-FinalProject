@@ -98,10 +98,10 @@
                     id
                     (syntax-expand value))]
             [while-exp (test bodies)
-                (syntax-expand (named-let-exp
-                    'loop
-                    '()
+                (syntax-expand (letrec-exp
+                    (list (let-binding-exp 'while (lambda-exp '()
                     (list (if-exp
                         (syntax-expand test)
-                        (syntax-expand (let-exp '() (append (map syntax-expand bodies) (list (app-exp (var-exp 'loop) (list (lit-exp '())))))))
-                        (var-exp 'void)))))])))
+                        (syntax-expand (let-exp '() (map syntax-expand bodies)))
+                        (var-exp 'void))))))
+                    (list (app-exp (var-exp 'while) (list (var-exp 'void))))))])))
