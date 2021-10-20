@@ -48,14 +48,6 @@
       [lambda-imp-exp (ids opt-id bodies)
         (imp-closure ids opt-id bodies env)]
 
-      [while-exp (test bodies)
-        (let loop ()
-          (if (eval-exp test env)
-            (begin
-              (for-each (lambda (body) (eval-exp body env)) bodies)
-              (loop))
-            (void)))]
-
       [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
 (define split-for-imp

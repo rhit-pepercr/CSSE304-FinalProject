@@ -98,6 +98,10 @@
                     id
                     (syntax-expand value))]
             [while-exp (test bodies)
-                (while-exp
-                    (syntax-expand test)
-                    (map syntax-expand bodies))])))
+                (syntax-expand (named-let-exp
+                    'loop
+                    '()
+                    (list (if-exp
+                        (syntax-expand test)
+                        (syntax-expand (let-exp '() (append (map syntax-expand bodies) (list (app-exp (var-exp 'loop) (list (lit-exp '())))))))
+                        (var-exp 'void)))))])))
