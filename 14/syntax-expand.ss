@@ -104,4 +104,4 @@
                         (syntax-expand test)
                         (syntax-expand (let-exp '() (map syntax-expand bodies)))
                         (var-exp 'void))))))
-                    (list (app-exp (var-exp 'while) (list (var-exp 'void))))))])))
+                    (list (app-exp (var-exp 'while) (list )))))])))
