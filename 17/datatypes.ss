@@ -59,7 +59,10 @@
     (clauses (list-of expression?))]
   [while-exp
     (test expression?)
-    (bodies (list-of expression?))])
+    (bodies (list-of expression?))]
+  [define-exp
+    (id symbol?)
+    (expression expression?)])
 
  	
 ;; environment type definitions

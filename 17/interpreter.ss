@@ -3,7 +3,15 @@
 (define top-level-eval
   (lambda (form)
     ; later we may add things that are not expressions.
-    (eval-exp form (empty-env-record))))
+    (cases expression (car form)
+      [define-exp (id expression) 
+        (extend-env 
+          id 
+          (eval-exp expression (empty-env-record)) init-env)]
+      [begin-exp (expressions) 
+        (for-each (lambda (exp) (top-level-eval exp)) expressions)]
+      [else (eval-exp form (empty-env-record))])))
+
 
 ; eval-exp is the main component of the interpreter
 

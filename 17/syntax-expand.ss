@@ -115,4 +115,8 @@
                             (if-exp
                                 test
                                 (let-exp '() (append bodies (list (app-exp (var-exp 'loop) (list (lit-exp '()))))))
-                                (var-exp 'void)))))])))
+                                (var-exp 'void)))))]
+            [define-exp (id expression)
+                (define-exp 
+                    id
+                    (syntax-expand expression))])))

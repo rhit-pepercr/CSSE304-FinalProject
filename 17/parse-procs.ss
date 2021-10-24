@@ -32,7 +32,7 @@
           ; literal symbol and list
           [(eqv? (car datum) 'quote)
             (lit-exp datum)]
-                
+            
           ; lambda expressions
           [(eqv? (car datum) 'lambda)
             (cond
@@ -162,6 +162,15 @@
                 (while-exp (parse-exp (cadr datum)) (list (parse-exp 'void)))
                 (while-exp (parse-exp (cadr datum)) (map parse-exp (cddr datum)))))]
 
+          [(eqv? (car datum) 'define)
+            (if (null? (cdr datum))
+              (eopl:error 'parse-exp "Invalid 'define' expression ~s: Insufficient length" datum)
+              (define-exp 
+                (cadr datum) 
+                (if (null? (cddr datum))
+                  (parse-exp 'void)
+                  (parse-exp (caddr datum)))))]
+
           ; app expression
           [else (app-exp (parse-exp (1st datum))
 		        (map parse-exp (cdr datum)))])]
@@ -203,6 +212,7 @@
       [and-exp (clauses) (append (list 'and) (map unparse-exp clauses))]
       [or-exp (clauses) (append (list 'or) (map unparse-exp clauses))]
       [while-exp (test bodies) (append (list 'while (unparse-exp test)) (map unparse-exp bodies))]
+      [define-exp (id expression) (list 'define id (unparse-exp expression))]
       [app-exp (operator operands) (cons (unparse-exp operator) (map unparse-exp operands))]
       [lit-exp (id) id]))) 
 
