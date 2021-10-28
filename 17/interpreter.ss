@@ -3,13 +3,19 @@
 (define top-level-eval
   (lambda (form)
     ; later we may add things that are not expressions.
-    (cases expression (car form)
+    (cases expression form
       [define-exp (id expression) 
-        (extend-env 
-          id 
-          (eval-exp expression (empty-env-record)) init-env)]
-      [begin-exp (expressions) 
-        (for-each (lambda (exp) (top-level-eval exp)) expressions)]
+        (update-global-env 
+          id
+          (eval-exp expression (empty-env-record)))]
+      [app-exp (operator operands)
+        (if (null? operands)
+          (top-level-eval operator)
+          (eval-exp form (empty-env-record)))]
+      [lambda-exp (ids bodies)
+        (if (null? ids)
+          (for-each (lambda (body) (top-level-eval body)) bodies)
+          (eval-exp form (empty-env-record)))]
       [else (eval-exp form (empty-env-record))])))
 
 
@@ -30,9 +36,7 @@
       [if-exp (condition then-exp else-exp)
         (if (eval-exp condition env)
           (eval-exp then-exp env)
-          (if (eqv? (cadr else-exp) 'void)
-            (void)
-            (eval-exp else-exp env)))]
+          (eval-exp else-exp env))]
 
       [let-binding-exp (id binding)
         (cons id (eval-exp binding env))]
@@ -97,12 +101,8 @@
     cdaar cdadr cddar cdddr procedure? set-car! set-cdr! assq atom? vector make-vector vector-ref 
     vector-set! display newline void map apply negative? positive? quotient append eqv? list-tail))
 
-(define init-env         ; for now, our initial global environment only contains 
-  (extend-env            ; procedure names.  Recall that an environment associates
-     *prim-proc-names*   ;  a value (not an expression) with an identifier.
-     (map prim-proc      
-          *prim-proc-names*)
-     (empty-env)))
+(define global-env         
+  (make-init-env))
 
 ; Usually an interpreter must define each 
 ; built-in procedure individually.  We are "cheating" a little bit.
@@ -133,7 +133,7 @@
       [(list->vector) (list->vector (1st args))]
       [(list?) (list? (1st args))]
       [(not) (if (1st args) #f #t)]
-      [(pair?) (pair? args)]
+      [(pair?) (apply pair? args)]
       [(vector->list) (vector->list (1st args))]
       [(vector?) (vector? (1st args))]
       [(number?) (number? (1st args))]

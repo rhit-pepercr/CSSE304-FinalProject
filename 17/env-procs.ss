@@ -9,6 +9,36 @@
   (lambda (syms vals env)
     (extended-env-record syms (map box vals) env)))
 
+(define make-init-env
+  (lambda ()
+    (extend-env            
+     *prim-proc-names*  
+     (map prim-proc      
+          *prim-proc-names*)
+     (empty-env))))
+
+(define reset-global-env
+  (lambda () 
+    (set! global-env (make-init-env))))
+
+(define update-global-env
+  (lambda (sym val)
+    (cases environment global-env
+      [extended-env-record (syms vals env)
+        (if (member sym syms)
+          (set-ref!
+            (apply-global-env sym)
+            val)
+          (set! 
+            global-env
+            (extended-env-record
+              (cons sym syms)
+              (cons (box val) vals)
+              (empty-env))))]
+      [empty-env-record ()     
+        (eopl:error 'global-env "This should never happen")])))
+    
+
 (define list-find-position
   (lambda (sym los)
     (let loop ([los los] [pos 0])
@@ -37,7 +67,7 @@
 
 (define apply-global-env
   (lambda (sym) 
-    (cases environment init-env 
+    (cases environment global-env 
       [extended-env-record (syms vals env)
 	      (let ([pos (list-find-position sym syms)])
       	  (if (number? pos)

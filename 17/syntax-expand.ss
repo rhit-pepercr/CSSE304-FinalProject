@@ -53,7 +53,7 @@
                 (syntax-expand
                     (let if-nest ([num-ifs (length clauses)] [clauses clauses])
                         (if (zero? num-ifs)
-                            (var-exp 'void)
+                            '(app-exp (var-exp void) ())
                             (if (eqv? (car (cdadar clauses)) 'else)
                                 (if-exp (lit-exp #t) (car (caddar clauses)) (if-nest (sub1 num-ifs) (cdr clauses)))
                                 (if-exp (cadar clauses) (car (caddar clauses)) (if-nest (sub1 num-ifs) (cdr clauses)))))))]
@@ -115,7 +115,7 @@
                             (if-exp
                                 test
                                 (let-exp '() (append bodies (list (app-exp (var-exp 'loop) (list (lit-exp '()))))))
-                                (var-exp 'void)))))]
+                                '(app-exp (var-exp void) ())))))]
             [define-exp (id expression)
                 (define-exp 
                     id

@@ -103,7 +103,7 @@
                 (parse-exp (2nd datum))
                 (parse-exp (3rd datum))
                 (if (null? (cdddr datum))
-                  (parse-exp 'void)
+                  (parse-exp '(void))
                   (if (null? (cddddr datum))
                     (parse-exp (cadddr datum))
                     (eopl:error 'parse-exp "Invalid 'if' Expression: Excess Length in ~s" datum))))
@@ -126,7 +126,7 @@
           ; begin expression
           [(eqv? (car datum) 'begin)
             (if (null? (cdr datum))
-              (begin-exp (list (parse-exp 'void)))
+              (begin-exp (list (parse-exp '(void))))
               (begin-exp
                 (map parse-exp (cdr datum))))]
 
@@ -159,7 +159,7 @@
             (if (null? (cdr datum))
               (eopl:error 'parse-exp "Invalid 'while' expression ~s: Insufficient length" datum)
               (if (null? (cddr datum))
-                (while-exp (parse-exp (cadr datum)) (list (parse-exp 'void)))
+                (while-exp (parse-exp (cadr datum)) (list (parse-exp '(void))))
                 (while-exp (parse-exp (cadr datum)) (map parse-exp (cddr datum)))))]
 
           [(eqv? (car datum) 'define)
@@ -168,7 +168,7 @@
               (define-exp 
                 (cadr datum) 
                 (if (null? (cddr datum))
-                  (parse-exp 'void)
+                  (parse-exp '(void))
                   (parse-exp (caddr datum)))))]
 
           ; app expression
@@ -202,7 +202,7 @@
           (list 'let name (map unparse-exp bindings))
           (map unparse-exp bodies))]
       [if-exp (condition then else) 
-        (if (equal? '(var-exp void) else)
+        (if (equal? '(app-exp (var-exp void) ()) else)
           (list 'if (unparse-exp condition) (unparse-exp then))
           (list 'if (unparse-exp condition) (unparse-exp then) (unparse-exp else)))]
       [set!-exp (id expression) (list 'set! id (unparse-exp expression))]
