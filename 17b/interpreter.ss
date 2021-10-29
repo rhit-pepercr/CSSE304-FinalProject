@@ -21,7 +21,7 @@
 
 ; eval-exp is the main component of the interpreter
 
-(trace-define eval-exp
+(define eval-exp
   (lambda (exp env)
     (cases expression exp
       [lit-exp (datum)
@@ -42,9 +42,18 @@
         (cons id (eval-exp binding env))]
 
       [app-exp (operator operands)
-        (let ([proc-value (eval-exp operator env)]
-              [args (map (lambda (operand) (eval-exp operand env)) operands)])
-          (apply-proc proc-value args))]
+        (let* ([proc-value (eval-exp operator env)]
+              [args 
+                (if (eqv? (car proc-value) 'closure)
+                  (map 
+                    (lambda (param operand)
+                      (if (eqv? (car param) 'ref-exp)
+                        (cadr operand)
+                        (eval-exp operand env))) 
+                    (cadr proc-value) 
+                    operands)
+                  (map (lambda (operand) (eval-exp operand env)) operands))])
+              (apply-proc proc-value args))]
 
       [lambda-exp (ids bodies)
         (closure ids bodies env)]
@@ -78,10 +87,19 @@
       [prim-proc (op) (apply-prim-proc op args)]
 
       [closure (ids bodies env)
-        (let ([assls (map (lambda (id arg) (cons id arg)) ids args)])
-          ;(let ([by-values (filter (lambda (asso) (eqv? (caar asso) 'var-exp)) assls)])
-            (let ([new-env (extend-env (map cadar assls) (map cdr assls) env)])
-              (for-each (lambda (body) (eval-exp body new-env)) bodies)))]
+        (let* ([assls (map (lambda (id arg) (cons id arg)) ids args)]
+               [by-values (filter (lambda (asso) (eqv? (caar asso) 'var-exp)) assls)]
+               [by-refs (filter (lambda (asso) (eqv? (caar asso) 'ref-exp)) assls)]
+               [new-env 
+                  (extend-env 
+                    (append (map cadar by-values) (map cadar by-refs))
+                    (append (map cdr by-values) (map (lambda (ref) (apply-env-ref env (cdr ref))) by-refs)) 
+                    env)])
+                  (for-each (lambda (body) (eval-exp body new-env)) bodies))]
+         
+      ;[closure (ids bodies env)
+      ;  (let ([new-env (extend-env (map cadr ids) args env)])
+      ;    (for-each (lambda (body) (eval-exp body new-env)) bodies))]
 
       [n-closure (id bodies env)
         (let ([new-env (extend-env (list id) (list args) env)])
