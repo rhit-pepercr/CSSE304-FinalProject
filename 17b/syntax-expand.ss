@@ -90,7 +90,7 @@
                         bindings
                         (list 
                             (letrec-exp 
-                                (list (let-binding-exp name (lambda-exp (map cadr bindings) bodies)))
+                                (list (let-binding-exp name (lambda-exp (map (lambda (param) (if (pair? param) (ref-exp (cadr param)) (var-exp param))) (map cadr bindings)) bodies)))
                                 (list (app-exp (var-exp name) (map caddr bindings)))))))]
 
             [app-exp (operator operands) 
