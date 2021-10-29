@@ -21,7 +21,7 @@
 
 ; eval-exp is the main component of the interpreter
 
-(define eval-exp
+(trace-define eval-exp
   (lambda (exp env)
     (cases expression exp
       [lit-exp (datum)
@@ -78,8 +78,10 @@
       [prim-proc (op) (apply-prim-proc op args)]
 
       [closure (ids bodies env)
-        (let ([new-env (extend-env ids args env)])
-          (for-each (lambda (body) (eval-exp body new-env)) bodies))]
+        (let ([assls (map (lambda (id arg) (cons id arg)) ids args)])
+          ;(let ([by-values (filter (lambda (asso) (eqv? (caar asso) 'var-exp)) assls)])
+            (let ([new-env (extend-env (map cadar assls) (map cdr assls) env)])
+              (for-each (lambda (body) (eval-exp body new-env)) bodies)))]
 
       [n-closure (id bodies env)
         (let ([new-env (extend-env (list id) (list args) env)])

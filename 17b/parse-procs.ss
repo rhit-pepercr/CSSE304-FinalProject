@@ -7,7 +7,7 @@
 (define 2nd cadr)
 (define 3rd caddr)
 
-(define parse-exp         
+(define parse-exp
   (lambda (datum)
     (cond
       ; literal number
@@ -44,11 +44,9 @@
 
             (if (list? (2nd datum)) 
               ; normal lambda expression
-              (if (andmap symbol? (2nd datum))
-                (lambda-exp 
-                  (2nd  datum)
-                  (map parse-exp (cddr datum)))
-                (eopl:error 'parse-exp "Invalid Lambda Expression: Formal arguments ~s must all be symbols" (2nd datum)))
+              (lambda-exp 
+                (map (lambda (param) (if (pair? param) (ref-exp (cadr param)) (var-exp param))) (2nd  datum))
+                (map parse-exp (cddr datum)))
               (if (pair? (2nd datum)) 
                 ; improper params lambda expression
                 (let ([split-list (split-imp (2nd datum))])

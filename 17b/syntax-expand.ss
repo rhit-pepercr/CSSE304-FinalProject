@@ -21,10 +21,11 @@
                 (let-binding-exp
                     id
                     (syntax-expand binding))]
+            ;(map (lambda (param) (if (pair? param) (ref-exp (cadr param)) (var-exp param))) (2nd  datum))
             [let-exp (bindings bodies)
                 (app-exp
                     (lambda-exp 
-                        (map cadr bindings)
+                        (map (lambda (param) (if (pair? param) (ref-exp (cadr param)) (var-exp param))) (map cadr bindings))
                         (map syntax-expand bodies))
                     (map syntax-expand (map caddr bindings)))]
             [let*-exp (bindings bodies) 
@@ -119,4 +120,5 @@
             [define-exp (id expression)
                 (define-exp 
                     id
-                    (syntax-expand expression))])))
+                    (syntax-expand expression))]
+            [ref-exp (id) parsed-exp])))

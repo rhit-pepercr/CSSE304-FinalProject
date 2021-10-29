@@ -6,7 +6,7 @@
   [var-exp
    (id symbol?)]
   [lambda-exp
-   (ids (list-of symbol?))
+   (ids (list-of expression?))
    (bodies (list-of expression?))]
   [lambda-n-exp
     (id symbol?)
@@ -62,7 +62,9 @@
     (bodies (list-of expression?))]
   [define-exp
     (id symbol?)
-    (expression expression?)])
+    (expression expression?)]
+  [ref-exp 
+    (id symbol?)])
 
  	
 ;; environment type definitions
@@ -84,7 +86,7 @@
   [prim-proc
    (name symbol?)]
   [closure 
-    (ids (list-of symbol?))
+    (ids (list-of expression?))
     (bodies (list-of expression?))
     (env environment?)]
   [n-closure
