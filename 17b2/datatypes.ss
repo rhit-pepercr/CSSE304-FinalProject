@@ -4,7 +4,7 @@
 
 (define-datatype expression expression?
   [var-exp
-   (id symbol?)]
+   (id scheme-value?)]
   [lambda-exp
    (ids (list-of symbol?))
    (bodies (list-of expression?))]
@@ -44,7 +44,7 @@
     (then expression?)
     (else expression?)]
   [set!-exp
-    (id symbol?)
+    (id scheme-value?)
     (expression expression?)]
   [begin-exp
     (expressions (list-of expression?))]
@@ -61,7 +61,7 @@
     (test expression?)
     (bodies (list-of expression?))]
   [define-exp
-    (id symbol?)
+    (id scheme-value?)
     (expression expression?)])
 
  	
@@ -73,8 +73,8 @@
 (define-datatype environment environment?
   (empty-env-record)
   (extended-env-record
-   (syms (list-of symbol?))
-   (vals (list-of scheme-value?))
+   (lex-syms (list-of scheme-value?))
+   (vals scheme-value?)
    (env environment?)))
 
 ; datatype for procedures.  At first there is only one
@@ -84,7 +84,7 @@
   [prim-proc
    (name symbol?)]
   [closure 
-    (ids (list-of symbol?))
+    (ids (list-of scheme-value?))
     (bodies (list-of expression?))
     (env environment?)]
   [n-closure

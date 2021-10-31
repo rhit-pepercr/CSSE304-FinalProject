@@ -7,6 +7,50 @@
 (define 2nd cadr)
 (define 3rd caddr)
 
+(define lexical-address
+  (lambda (expanded-parsed-exp)
+    (let helper ([exp expanded-parsed-exp] [scope-list '()])
+      (if (null? exp)
+        exp
+        (cases expression exp
+          [lit-exp (id) exp]
+          [var-exp (id) (var-exp (get-lex-add (cadr exp) scope-list))]
+          [lambda-exp (ids bodies)
+            (let ([scope-list (cons (cadr exp) scope-list)])
+              (lambda-exp
+                  (cadr exp)
+                  (map (lambda (body) (helper body scope-list)) (caddr exp))))]
+          [if-exp (condition then else)
+            (if-exp
+              (helper condition scope-list)
+              (helper then scope-list)
+              (helper else scope-list))]
+          [set!-exp (id expression)
+            (set!-exp
+              (helper (var-exp (cadr exp)) scope-list)
+              (helper (caddr exp) scope-list))]
+          [app-exp (operator operands)
+            (app-exp
+              (helper operator scope-list)
+              (map (lambda (rand) (helper rand scope-list)) operands))]
+          [define-exp (id expression)
+            (define-exp
+              (helper (var-exp (cadr exp)) scope-list)
+              (helper (caddr exp) scope-list))]
+          [else (map (lambda (arg) (helper arg scope-list)) exp)])))))
+
+(define get-lex-add
+    (lambda (var scope-list)
+        (let helper ([scope-list scope-list] [depth 0])
+            (if (null? scope-list)
+                (list ': 'free var)
+                (if (ormap (lambda (arg) (eqv? var arg)) (car scope-list))
+                    (let bound-lex-add ([args (car scope-list)] [pos 0])
+                        (if (eqv? (car args) var)
+                            (list ': depth pos)
+                            (bound-lex-add (cdr args) (+ pos 1))))
+                    (helper (cdr scope-list) (+ depth 1)))))))
+
 (define parse-exp         
   (lambda (datum)
     (cond

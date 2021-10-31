@@ -6,7 +6,7 @@
     (cases expression form
       [define-exp (id expression) 
         (update-global-env 
-          id
+          (car (cddadr id))
           (eval-exp expression (empty-env-record)))]
       [app-exp (operator operands)
         (if (null? operands)
@@ -57,7 +57,7 @@
 
       [set!-exp (id expression)
         (set-ref!
-          (apply-env-ref env id)
+          (apply-env-ref env (cadr id))
           (eval-exp expression env))]
 
       [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
@@ -190,7 +190,7 @@
           (rep))))))  ; tail-recursive, so stack doesn't grow.
 
 (define eval-one-exp
-  (lambda (x) (top-level-eval (syntax-expand (parse-exp x)))))
+  (lambda (x) (top-level-eval (lexical-address (syntax-expand (parse-exp x))))))
 
 
 

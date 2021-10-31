@@ -7,14 +7,14 @@
 
 (define extend-env
   (lambda (syms vals env)
-    (extended-env-record syms (map box vals) env)))
+    (extended-env-record syms (list->vector (map box vals)) env)))
 
 (define make-init-env
   (lambda ()
-    (extend-env            
+    (extended-env-record            
      *prim-proc-names*  
-     (map prim-proc      
-          *prim-proc-names*)
+     (map box (map prim-proc      
+          *prim-proc-names*))
      (empty-env))))
 
 (define reset-global-env
@@ -47,15 +47,18 @@
 	    [else (loop (cdr los) (add1 pos))]))))
 	    
 (define apply-env-ref
-  (lambda (env sym) 
+  (lambda (env lex-sym) 
     (cases environment env 
       [empty-env-record ()      
-        (apply-global-env sym) ]
-      [extended-env-record (syms vals env)
-	      (let ((pos (list-find-position sym syms)))
-      	    (if (number? pos)
-	            (list-ref vals pos)
-	            (apply-env-ref env sym)))])))
+        (apply-global-env (caddr lex-sym))]
+      [extended-env-record (syms vals link-env)
+        (if (eqv? (cadr lex-sym) 'free)
+          (apply-env-ref link-env lex-sym)
+          (let ([pos (caddr lex-sym)])
+            (let sym-lookup ([depth (cadr lex-sym)] [env env])
+              (if (zero? depth)
+                (vector-ref (caddr env) pos)
+                (sym-lookup (sub1 depth) (cadddr env))))))])))
 
 (define apply-env
   (lambda (env sym)
