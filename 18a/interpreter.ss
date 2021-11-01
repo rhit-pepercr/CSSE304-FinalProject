@@ -7,44 +7,52 @@
       [define-exp (id expression) 
         (update-global-env 
           id
-          (eval-exp expression (empty-env-record)))]
+          (eval-exp expression (empty-env-record) (init-k)))]
       [app-exp (operator operands)
         (if (null? operands)
           (top-level-eval operator)
-          (eval-exp form (empty-env-record)))]
+          (eval-exp form (empty-env-record) (init-k)))]
       [lambda-exp (ids bodies)
         (if (null? ids)
           (for-each (lambda (body) (top-level-eval body)) bodies)
-          (eval-exp form (empty-env-record)))]
-      [else (eval-exp form (empty-env-record))])))
+          (eval-exp form (empty-env-record) (init-k)))]
+      [else (eval-exp form (empty-env-record) (init-k))])))
 
 
 ; eval-exp is the main component of the interpreter
 
 (define eval-exp
-  (lambda (exp env)
+  (lambda (exp env k)
     (cases expression exp
       [lit-exp (datum)
         (if (pair? datum)
           (if (eqv? (car datum) 'quote)
-            (cadr datum))
-          datum)]
+            (apply-k k (cadr datum)))
+          (apply-k k datum))]
 
       [var-exp (id)
-	      (apply-env env id)]
+	      (apply-k k (apply-env env id))]
 
       [if-exp (condition then-exp else-exp)
-        (if (eval-exp condition env)
-          (eval-exp then-exp env)
-          (eval-exp else-exp env))]
+        (eval-exp 
+          condition
+          env
+          (if-k then-exp else-exp env k))]
 
       [let-binding-exp (id binding)
-        (cons id (eval-exp binding env))]
+        (eval-exp
+          binding
+          env
+          (binding-k id k))]
 
       [app-exp (operator operands)
-        (let ([proc-value (eval-exp operator env)]
-              [args (map (lambda (operand) (eval-exp operand env)) operands)])
-          (apply-proc proc-value args))]
+        (eval-exp
+          operator
+          env
+          (app-k operands k))]
+        ;(let ([proc-value (eval-exp operator env k)]
+        ;      [args (map (lambda (operand) (eval-exp operand env k)) operands)])
+        ;  (apply-proc proc-value args))]
 
       [lambda-exp (ids bodies)
         (closure ids bodies env)]
@@ -58,7 +66,7 @@
       [set!-exp (id expression)
         (set-ref!
           (apply-env-ref env id)
-          (eval-exp expression env))]
+          (eval-exp expression env k))]
 
       [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
@@ -79,16 +87,16 @@
 
       [closure (ids bodies env)
         (let ([new-env (extend-env ids args env)])
-          (for-each (lambda (body) (eval-exp body new-env)) bodies))]
+          (for-each (lambda (body) (eval-exp body new-env k)) bodies))]
 
       [n-closure (id bodies env)
         (let ([new-env (extend-env (list id) (list args) env)])
-          (for-each (lambda (body) (eval-exp body new-env)) bodies))]
+          (for-each (lambda (body) (eval-exp body new-env k)) bodies))]
 
       [imp-closure (ids opt-id bodies env)
         (let* ([split-args (split-for-imp args (length ids))]
                [new-env (extend-env (append ids (list opt-id)) split-args env)])
-          (for-each (lambda (body) (eval-exp body new-env)) bodies))]
+          (for-each (lambda (body) (eval-exp body new-env k)) bodies))]
 
 			; You will add other cases
       [else (error 'apply-proc
