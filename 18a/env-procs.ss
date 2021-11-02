@@ -50,7 +50,7 @@
   (lambda (env sym) 
     (cases environment env 
       [empty-env-record ()      
-        (apply-global-env sym) ]
+        (apply-global-env sym)]
       [extended-env-record (syms vals env)
 	      (let ((pos (list-find-position sym syms)))
       	    (if (number? pos)

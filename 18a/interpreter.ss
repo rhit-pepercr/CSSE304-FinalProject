@@ -46,13 +46,10 @@
           (binding-k id k))]
 
       [app-exp (operator operands)
-        (eval-exp
-          operator
-          env
-          (app-k operands k))]
-        ;(let ([proc-value (eval-exp operator env k)]
-        ;      [args (map (lambda (operand) (eval-exp operand env k)) operands)])
-        ;  (apply-proc proc-value args))]
+        (map-cps
+          (lambda (operand k) (eval-exp operand env k))
+          operands
+          (app-k operator env k))]
 
       [lambda-exp (ids bodies)
         (closure ids bodies env)]
@@ -64,9 +61,10 @@
         (imp-closure ids opt-id bodies env)]
 
       [set!-exp (id expression)
-        (set-ref!
-          (apply-env-ref env id)
-          (eval-exp expression env k))]
+        (eval-exp
+          expression
+          env
+          (set!-k id env k))]
 
       [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
@@ -81,9 +79,9 @@
 ;  User-defined procedures will be added later.
 
 (define apply-proc
-  (lambda (proc-value args)
+  (lambda (proc-value args k)
     (cases proc-val proc-value
-      [prim-proc (op) (apply-prim-proc op args)]
+      [prim-proc (op) (apply-k k (apply-prim-proc op args))]
 
       [closure (ids bodies env)
         (let ([new-env (extend-env ids args env)])

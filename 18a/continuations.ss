@@ -12,17 +12,25 @@
         (id symbol?)
         (k continuation?)]
     [app-k
-        (operands (list-of expression?))
+        (operator expression?)
+        (env environment?)
+        (k continuation?)]
+    [apply-proc-k
+        (operands (list-of scheme-value?))
         (k continuation?)]
     [map-k 
         (proc-cps procedure?)
-        (L list?)
+        (el scheme-value?)
         (k continuation?)]
     [map-proc-k
         (mapped-cdr list?)
+        (k continuation?)]
+    [set!-k
+        (id symbol?)
+        (env environment?)
         (k continuation?)])
 
-(trace-define apply-k
+(define apply-k
     (lambda (k v)
         (cases continuation k
             [init-k () v]
@@ -32,20 +40,27 @@
                     (eval-exp else env k))]
             [binding-k (id k) 
                 (apply-k k (cons id v))]
-            [app-k (operands k)
-                ]
-            [map-k (proc-cps L k) 
+            [app-k (operator env k)
+                (eval-exp
+                    operator
+                    env
+                    (apply-proc-k v k))]
+            [apply-proc-k (operands k)
+                (apply-proc v operands k)]
+            [map-k (proc-cps el k)
                 (proc-cps
-                    (car L)
+                    el
                     (map-proc-k v k))]
             [map-proc-k (mapped-cdr k)
-                (apply-k k (cons v mapped-cdr))])))
+                (apply-k k (cons v mapped-cdr))]
+            [set!-k (id env k)
+                (apply-k k (set-ref! (apply-env-ref env id) v))])))
 
-(trace-define map-cps
+(define map-cps
     (lambda (proc-cps L k)
         (if (null? L)
             (apply-k k '())
             (map-cps
                 proc-cps
                 (cdr L)
-                (map-k proc-cps L k)))))
+                (map-k proc-cps (car L) k)))))
