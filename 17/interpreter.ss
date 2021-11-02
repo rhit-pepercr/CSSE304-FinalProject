@@ -38,9 +38,6 @@
           (eval-exp then-exp env)
           (eval-exp else-exp env))]
 
-      [let-binding-exp (id binding)
-        (cons id (eval-exp binding env))]
-
       [app-exp (operator operands)
         (let ([proc-value (eval-exp operator env)]
               [args (map (lambda (operand) (eval-exp operand env)) operands)])

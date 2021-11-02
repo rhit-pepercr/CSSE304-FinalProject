@@ -10,11 +10,12 @@
           (eval-exp expression (empty-env-record) (init-k)))]
       [app-exp (operator operands)
         (if (null? operands)
-          (top-level-eval operator)
-          (eval-exp form (empty-env-record) (init-k)))]
-      [lambda-exp (ids bodies)
-        (if (null? ids)
-          (for-each (lambda (body) (top-level-eval body)) bodies)
+          (cases expression operator
+            [lambda-exp (ids bodies)
+              (if (null? ids)
+                (for-each (lambda (body) (top-level-eval body)) bodies)
+                (eval-exp form (empty-env-record) (init-k)))]
+            [else (top-level-eval operator)])
           (eval-exp form (empty-env-record) (init-k)))]
       [else (eval-exp form (empty-env-record) (init-k))])))
 
@@ -39,12 +40,6 @@
           env
           (if-k then-exp else-exp env k))]
 
-      [let-binding-exp (id binding)
-        (eval-exp
-          binding
-          env
-          (binding-k id k))]
-
       [app-exp (operator operands)
         (map-cps
           (lambda (operand k) (eval-exp operand env k))
@@ -52,13 +47,13 @@
           (app-k operator env k))]
 
       [lambda-exp (ids bodies)
-        (closure ids bodies env)]
+        (apply-k k (closure ids bodies env))]
       
       [lambda-n-exp (id bodies)
-        (n-closure id bodies env)]
+        (apply-k k (n-closure id bodies env))]
 
       [lambda-imp-exp (ids opt-id bodies)
-        (imp-closure ids opt-id bodies env)]
+        (apply-k k (imp-closure ids opt-id bodies env))]
 
       [set!-exp (id expression)
         (eval-exp

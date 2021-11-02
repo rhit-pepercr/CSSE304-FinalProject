@@ -8,9 +8,6 @@
         (else expression?)
         (env environment?)
         (k continuation?)]
-    [binding-k
-        (id symbol?)
-        (k continuation?)]
     [app-k
         (operator expression?)
         (env environment?)
@@ -38,8 +35,6 @@
                 (if v
                     (eval-exp then env k)
                     (eval-exp else env k))]
-            [binding-k (id k) 
-                (apply-k k (cons id v))]
             [app-k (operator env k)
                 (eval-exp
                     operator
@@ -54,7 +49,9 @@
             [map-proc-k (mapped-cdr k)
                 (apply-k k (cons v mapped-cdr))]
             [set!-k (id env k)
-                (apply-k k (set-ref! (apply-env-ref env id) v))])))
+                (begin
+                    (set-ref! (apply-env-ref env id) v)
+                    (apply-k k v))])))
 
 (define map-cps
     (lambda (proc-cps L k)
