@@ -95,7 +95,9 @@
     (ids (list-of symbol?))
     (opt-id symbol?)
     (bodies (list-of expression?))
-    (env environment?)])
+    (env environment?)]
+  [k-proc 
+    (k continuation?)])
 
 	 
 	 

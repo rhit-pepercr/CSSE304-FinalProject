@@ -25,6 +25,10 @@
     [set!-k
         (id symbol?)
         (env environment?)
+        (k continuation?)]
+    [closure-k
+        (bodies (list-of expression?))
+        (env environment?)
         (k continuation?)])
 
 (define apply-k
@@ -51,7 +55,14 @@
             [set!-k (id env k)
                 (begin
                     (set-ref! (apply-env-ref env id) v)
-                    (apply-k k v))])))
+                    (apply-k k v))]
+            [closure-k (bodies env k)
+                (if (null? (cdr bodies))
+                    (apply-k k v)
+                    (eval-exp
+                        (cadr bodies)
+                        env
+                        (closure-k (cdr bodies) env k)))])))
 
 (define map-cps
     (lambda (proc-cps L k)
