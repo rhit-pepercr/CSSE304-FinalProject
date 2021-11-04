@@ -15,7 +15,7 @@
               (if (null? ids)
                 (for-each (lambda (body) (top-level-eval body)) bodies)
                 (eval-exp form (empty-env-record) (init-k)))]
-            [else (top-level-eval operator)])
+            [else (eval-exp form (empty-env-record) (init-k))])
           (eval-exp form (empty-env-record) (init-k)))]
       [else (eval-exp form (empty-env-record) (init-k))])))
 
@@ -112,7 +112,8 @@
   '(+ - * / add1 sub1 cons = zero? not >= > < <= car cdr list null? eq? equal? length list->vector 
     list? not pair? vector->list number? vector? symbol? caar cadr cdar cddr caaar caadr cadar caddr 
     cdaar cdadr cddar cdddr procedure? set-car! set-cdr! assq atom? vector make-vector vector-ref 
-    vector-set! display newline void map apply negative? positive? quotient append eqv? list-tail call/cc))
+    vector-set! display newline void map apply negative? positive? quotient append eqv? list-tail 
+    call/cc exit-list))
 
 (define global-env         
   (make-init-env))
@@ -184,6 +185,7 @@
       [(eqv?) (apply-k k (eqv? (1st args) (2nd args)))]
       [(list-tail) (apply-k k (list-tail (1st args) (2nd args)))]
       [(call/cc) (apply-proc (1st args) (list (k-proc k)) k)]
+      [(exit-list) args]
 
       [else (error 'apply-prim-proc 
             "Bad primitive procedure name: ~s" 
