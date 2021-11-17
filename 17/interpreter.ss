@@ -10,11 +10,12 @@
           (eval-exp expression (empty-env-record)))]
       [app-exp (operator operands)
         (if (null? operands)
-          (top-level-eval operator)
-          (eval-exp form (empty-env-record)))]
-      [lambda-exp (ids bodies)
-        (if (null? ids)
-          (for-each (lambda (body) (top-level-eval body)) bodies)
+          (cases expression operator
+            [lambda-exp (ids bodies)
+              (if (null? ids)
+                (for-each (lambda (body) (top-level-eval body)) bodies)
+                (eval-exp form (empty-env-record)))]
+            [else (eval-exp form (empty-env-record))])
           (eval-exp form (empty-env-record)))]
       [else (eval-exp form (empty-env-record))])))
 
